@@ -10,7 +10,6 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:migrate:sql": "node scripts/db-migrate-sql.mjs",
     "db:studio": "drizzle-kit studio",
     "db:seed": "node scripts/db-seed.mjs",
     "db:seed:staff": "node scripts/db-seed-staff-demo.mjs",
