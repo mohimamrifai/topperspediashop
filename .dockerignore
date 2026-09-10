@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.gitignore
+.env*
+!.env.example
+coverage
+tests
+docs
+*.md
+!DEPLOY.md
+.tasks.md
+pnpm-debug.log*

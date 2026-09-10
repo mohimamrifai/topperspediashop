@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: topperspediashop
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: topperspediashop
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U topperspediashop -d topperspediashop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://topperspediashop:${POSTGRES_PASSWORD}@db:5432/topperspediashop
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL in .env}
+      NEXT_PUBLIC_BETTER_AUTH_URL: ${NEXT_PUBLIC_BETTER_AUTH_URL:?Set NEXT_PUBLIC_BETTER_AUTH_URL in .env}
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  migrate:
+    profiles: ["tools"]
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://topperspediashop:${POSTGRES_PASSWORD}@db:5432/topperspediashop
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -lc "corepack enable
+      && pnpm config set dangerouslyAllowAllBuilds true
+      && pnpm install --frozen-lockfile
+      && pnpm db:push
+      && node scripts/db-migrate-sql.mjs"
+
+volumes:
+  postgres_data:
