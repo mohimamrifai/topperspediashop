@@ -1,11 +1,15 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { auditLogs, profiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth/session";
+import { parseDateRange } from "@/lib/dashboard";
 
+import { AuditLogsDateRange } from "./_components/audit-logs-date-range";
 import { AuditLogsTable } from "./_components/audit-logs-table";
+
+type SearchParams = Promise<{ from?: string; to?: string }>;
 
 // Daftar aksi yang dipakai di sistem (untuk filter & label).
 // Konsisten dengan penulisan `action` di `lib/actions/*`.
@@ -23,7 +27,14 @@ const ACTION_LABELS: Record<string, string> = {
   set_status: "Ubah Status",
 };
 
-export default async function AdminAuditLogsPage() {
+export default async function AdminAuditLogsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const range = parseDateRange(params.from, params.to);
+
   // Identifikasi admin yang login
   const user = await getCurrentUser();
   if (!user) redirect("/admin/login");
@@ -41,6 +52,13 @@ export default async function AdminAuditLogsPage() {
 
   // Query: audit_logs + join profiles 2x (actor & target).
   // Pakai alias `actor` dan `target` untuk username/role.
+  const dateFilter = range
+    ? and(
+        gte(auditLogs.createdAt, range.from),
+        lte(auditLogs.createdAt, range.to),
+      )
+    : undefined;
+
   const rows = await db
     .select({
       id: auditLogs.id,
@@ -65,6 +83,7 @@ export default async function AdminAuditLogsPage() {
       sql`profiles AS target`,
       sql`target.id = ${auditLogs.targetId}`,
     )
+    .where(dateFilter)
     .orderBy(desc(auditLogs.createdAt))
     .limit(500);
 
@@ -76,9 +95,14 @@ export default async function AdminAuditLogsPage() {
         </h1>
         <p className="mt-1 text-[11px] text-zinc-600 sm:text-xs">
           Riwayat semua perubahan penting yang dilakukan admin (saldo, level,
-          status, withdraw, dan akun admin). 500 entri terbaru.
+          status, withdraw, dan akun admin).
+          {range
+            ? " Menampilkan entri dalam periode yang dipilih (maks. 500)."
+            : " 500 entri terbaru."}
         </p>
       </div>
+
+      <AuditLogsDateRange />
 
       <AuditLogsTable
         initialLogs={rows.map((r) => ({

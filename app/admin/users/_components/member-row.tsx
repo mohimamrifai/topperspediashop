@@ -66,7 +66,12 @@ export function MemberRow({
   return (
     <tr className="group border-t border-zinc-200 transition hover:bg-zinc-50/60">
       <td className={`${cellClass} font-medium text-zinc-900`}>
-        {member.username}
+        <span>{member.username}</span>
+        {(member.lastSeenIp ?? member.registrationIp) ? (
+          <span className="mt-0.5 block font-mono text-[10px] font-normal tabular-nums text-zinc-400 sm:text-[11px]">
+            {member.lastSeenIp ?? member.registrationIp}
+          </span>
+        ) : null}
       </td>
       <td className={`${cellClass} font-mono tabular-nums`}>
         {member.phone ? (

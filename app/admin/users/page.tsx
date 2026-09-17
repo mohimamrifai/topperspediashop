@@ -36,6 +36,8 @@ export default async function AdminUsersPage() {
       balance: profiles.balance,
       frozenBalance: profiles.frozenBalance,
       status: profiles.status,
+      lastSeenIp: profiles.lastSeenIp,
+      registrationIp: profiles.registrationIp,
       createdAt: profiles.createdAt,
     })
     .from(profiles)
@@ -59,6 +61,8 @@ export default async function AdminUsersPage() {
           balance: r.balance,
           frozenBalance: r.frozenBalance,
           status: r.status,
+          lastSeenIp: r.lastSeenIp,
+          registrationIp: r.registrationIp,
           createdAt: r.createdAt.toISOString(),
           ...(isSuperAdmin
             ? { referrer: referrerMap?.get(r.id) ?? null }

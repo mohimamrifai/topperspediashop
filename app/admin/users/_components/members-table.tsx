@@ -25,6 +25,8 @@ export type Member = {
   balance: string;
   frozenBalance: string;
   status: string;
+  lastSeenIp: string | null;
+  registrationIp: string | null;
   createdAt: string;
   referrer?: MemberReferrerInfo | null;
 };

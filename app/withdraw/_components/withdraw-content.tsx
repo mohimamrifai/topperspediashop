@@ -137,7 +137,6 @@ export function WithdrawContent({
           </div>
           <div className="min-w-0 flex-1">
             <div className="space-y-0.5 text-[11px] text-rose-900/90 sm:text-xs">
-              <p className="font-semibold text-rose-700">Alasan:</p>
               <p className="whitespace-pre-line text-rose-900">
                 {withdrawLockReason}
               </p>

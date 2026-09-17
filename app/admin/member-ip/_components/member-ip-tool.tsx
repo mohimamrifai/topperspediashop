@@ -50,6 +50,8 @@ function toMember(row: MemberIpRow): Member {
     balance: row.balance,
     frozenBalance: row.frozenBalance,
     status: row.status,
+    lastSeenIp: row.lastSeenIp,
+    registrationIp: row.registrationIp,
     createdAt: row.createdAt,
   };
 }
