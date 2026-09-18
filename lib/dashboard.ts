@@ -15,8 +15,8 @@ export type DashboardStats = {
   totalMembers: number;
   rangeRegistrations: number;
   /**
-   * Jumlah member UNIK yang punya deposit `approved` dalam range.
-   * Reject tidak dihitung; 1 member yang deposit berkali-kali tetap dihitung 1.
+   * Jumlah member yang deposit `approved` PERTAMA KALI (sepanjang waktu)
+   * jatuh dalam range. Deposit berikutnya member yang sama tidak dihitung.
    */
   rangeDepositRequests: number;
   rangeDepositAmount: number;
@@ -99,13 +99,10 @@ export async function getDashboardStats(
   const inRange = (col: AnyPgColumn): SQL | undefined =>
     and(gte(col, activityRange.from), lte(col, activityRange.to));
   const profileRangeCondition = inRange(profiles.createdAt) ?? sql`false`;
-  // Filter "Depo Awal": hanya deposit `approved` (reject di-skip) dan
-  // dihitung per-member unik (1 member yang deposit 3x tetap 1).
-  const depositRangeCondition = and(
-    inRange(deposits.createdAt),
-    depositMemberFilter,
+  const approvedDepositBaseConditions = [
     eq(deposits.status, "approved"),
-  ) ?? sql`false`;
+    depositMemberFilter,
+  ].filter((c): c is SQL => c !== undefined);
   const approvedDepositRangeCondition = and(
     eq(deposits.status, "approved"),
     inRange(deposits.createdAt),
@@ -127,28 +124,39 @@ export async function getDashboardStats(
     withdrawalMemberFilter,
   ) ?? sql`false`;
 
-  const [memberAggRows, depositAggRows, withdrawalAggRows] = await Promise.all([
-    db
-      .select({
-        totalMembers: sql<number>`COUNT(*)::int`,
-        rangeRegistrations: sql<number>`COUNT(*) FILTER (WHERE ${profileRangeCondition})::int`,
-      })
-      .from(profiles)
-      .where(and(eq(profiles.role, "member"), memberFilter)),
-    db
-      .select({
-        rangeDepositRequests: sql<number>`COUNT(DISTINCT ${deposits.memberId}) FILTER (WHERE ${depositRangeCondition})::int`,
-        rangeDepositAmount: sql<string>`COALESCE(SUM(${deposits.amount}) FILTER (WHERE ${approvedDepositRangeCondition}), 0)`,
-        totalDepositAmount: sql<string>`COALESCE(SUM(${deposits.amount}) FILTER (WHERE ${approvedDepositTotalCondition}), 0)`,
-      })
-      .from(deposits),
-    db
-      .select({
-        rangeWithdrawalAmount: sql<string>`COALESCE(SUM(${withdrawals.amount}) FILTER (WHERE ${completedWithdrawalRangeCondition}), 0)`,
-        totalWithdrawalAmount: sql<string>`COALESCE(SUM(${withdrawals.amount}) FILTER (WHERE ${completedWithdrawalTotalCondition}), 0)`,
-      })
-      .from(withdrawals),
-  ]);
+  const [memberAggRows, depositAggRows, firstDepositRows, withdrawalAggRows] =
+    await Promise.all([
+      db
+        .select({
+          totalMembers: sql<number>`COUNT(*)::int`,
+          rangeRegistrations: sql<number>`COUNT(*) FILTER (WHERE ${profileRangeCondition})::int`,
+        })
+        .from(profiles)
+        .where(and(eq(profiles.role, "member"), memberFilter)),
+      db
+        .select({
+          rangeDepositAmount: sql<string>`COALESCE(SUM(${deposits.amount}) FILTER (WHERE ${approvedDepositRangeCondition}), 0)`,
+          totalDepositAmount: sql<string>`COALESCE(SUM(${deposits.amount}) FILTER (WHERE ${approvedDepositTotalCondition}), 0)`,
+        })
+        .from(deposits),
+      db
+        .select({ memberId: deposits.memberId })
+        .from(deposits)
+        .where(and(...approvedDepositBaseConditions))
+        .groupBy(deposits.memberId)
+        .having(
+          and(
+            sql`MIN(COALESCE(${deposits.approvedAt}, ${deposits.createdAt})) >= ${activityRange.from}`,
+            sql`MIN(COALESCE(${deposits.approvedAt}, ${deposits.createdAt})) <= ${activityRange.to}`,
+          ),
+        ),
+      db
+        .select({
+          rangeWithdrawalAmount: sql<string>`COALESCE(SUM(${withdrawals.amount}) FILTER (WHERE ${completedWithdrawalRangeCondition}), 0)`,
+          totalWithdrawalAmount: sql<string>`COALESCE(SUM(${withdrawals.amount}) FILTER (WHERE ${completedWithdrawalTotalCondition}), 0)`,
+        })
+        .from(withdrawals),
+    ]);
 
   const memberAgg = memberAggRows[0];
   const depositAgg = depositAggRows[0];
@@ -160,7 +168,7 @@ export async function getDashboardStats(
   return {
     totalMembers,
     rangeRegistrations: memberAgg?.rangeRegistrations ?? 0,
-    rangeDepositRequests: depositAgg?.rangeDepositRequests ?? 0,
+    rangeDepositRequests: firstDepositRows.length,
     rangeDepositAmount: rangeDeposit,
     rangeWithdrawalAmount: rangeWithdrawal,
     rangeProfit: Math.max(0, rangeDeposit - rangeWithdrawal),
