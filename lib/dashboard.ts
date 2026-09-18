@@ -140,16 +140,13 @@ export async function getDashboardStats(
         })
         .from(deposits),
       db
-        .select({ memberId: deposits.memberId })
+        .select({
+          memberId: deposits.memberId,
+          firstAt: sql<Date>`MIN(COALESCE(${deposits.approvedAt}, ${deposits.createdAt}))`,
+        })
         .from(deposits)
         .where(and(...approvedDepositBaseConditions))
-        .groupBy(deposits.memberId)
-        .having(
-          and(
-            sql`MIN(COALESCE(${deposits.approvedAt}, ${deposits.createdAt})) >= ${activityRange.from}`,
-            sql`MIN(COALESCE(${deposits.approvedAt}, ${deposits.createdAt})) <= ${activityRange.to}`,
-          ),
-        ),
+        .groupBy(deposits.memberId),
       db
         .select({
           rangeWithdrawalAmount: sql<string>`COALESCE(SUM(${withdrawals.amount}) FILTER (WHERE ${completedWithdrawalRangeCondition}), 0)`,
@@ -162,13 +159,19 @@ export async function getDashboardStats(
   const depositAgg = depositAggRows[0];
   const withdrawalAgg = withdrawalAggRows[0];
 
+  const rangeDepositRequests = firstDepositRows.filter((row) => {
+    const firstAt =
+      row.firstAt instanceof Date ? row.firstAt : new Date(String(row.firstAt));
+    return firstAt >= activityRange.from && firstAt <= activityRange.to;
+  }).length;
+
   const totalMembers = memberAgg?.totalMembers ?? 0;
   const rangeDeposit = Number(depositAgg?.rangeDepositAmount ?? 0);
   const rangeWithdrawal = Number(withdrawalAgg?.rangeWithdrawalAmount ?? 0);
   return {
     totalMembers,
     rangeRegistrations: memberAgg?.rangeRegistrations ?? 0,
-    rangeDepositRequests: firstDepositRows.length,
+    rangeDepositRequests,
     rangeDepositAmount: rangeDeposit,
     rangeWithdrawalAmount: rangeWithdrawal,
     rangeProfit: Math.max(0, rangeDeposit - rangeWithdrawal),
