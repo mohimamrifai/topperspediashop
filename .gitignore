@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/tests
+vitest.config.ts
 
 # next.js
 /.next/
@@ -30,8 +32,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files (keep .env.example for setup template)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,10 +43,19 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-
-docs/*
+# internal docs & notes (dev only — jangan kirim ke client)
+/docs/
+PRD.md
+AGENTS.md
+CLAUDE.md
+tasks.md
 .tasks.md
-tests
 data-vps.md
 
-src/uploaded/*
+# dev / one-off scripts (bukan bagian source production)
+scripts/apply-*.mjs
+scripts/diagnose-*.mjs
+scripts/db-seed-staff-demo.mjs
+
+# user uploads (local storage)
+/src/uploaded/
