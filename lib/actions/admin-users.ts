@@ -60,7 +60,7 @@ async function requireTeamManager(): Promise<{
 }
 
 function syntheticEmail(username: string) {
-  return `${username.toLowerCase()}@topperspediashop.app`;
+  return `${username.toLowerCase()}@shopgreypedreviewup.app`;
 }
 
 function describeBetterAuthError(err: unknown): string {

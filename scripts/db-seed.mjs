@@ -23,7 +23,7 @@ const sql = postgres(url, {
 });
 
 const syntheticEmail = (username) =>
-  `${username.toLowerCase()}@topperspediashop.app`;
+  `${username.toLowerCase()}@shopgreypedreviewup.app`;
 
 function generateReferralCode() {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";

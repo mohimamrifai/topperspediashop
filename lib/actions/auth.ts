@@ -18,7 +18,7 @@ export type AuthState = {
 };
 
 function syntheticEmail(username: string) {
-  return `${username.toLowerCase()}@topperspediashop.app`;
+  return `${username.toLowerCase()}@shopgreypedreviewup.app`;
 }
 
 async function updateMemberLastSeenIp(userId: string) {

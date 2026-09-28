@@ -8,7 +8,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { profiles } from "@/lib/db/schema";
 
-const INTERNAL_USER_HEADER = "x-topperspediashop-user";
+const INTERNAL_USER_HEADER = "x-shopgreypedreviewup-user";
 
 type ForwardedUser = {
   id: string;
