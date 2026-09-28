@@ -12,8 +12,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "TopperspediaShop",
-  description: "TopperspediaShop",
+  title: "ShopGreypedReviewUp",
+  description: "ShopGreypedReviewUp",
 };
 
 export default function RootLayout({

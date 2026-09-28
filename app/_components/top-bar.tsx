@@ -8,7 +8,7 @@ export function TopBar() {
         <Link href="/" className="flex items-center">
           <Image
             src="/logo.webp"
-            alt="TopperspediaShop"
+            alt="ShopGreypedReviewUp"
             width={140}
             height={36}
             priority

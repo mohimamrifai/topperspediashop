@@ -23,7 +23,7 @@ export default function LoginPage() {
         <div className="mb-5 flex justify-center sm:mb-8">
           <Image
             src="/logo.webp"
-            alt="TopperspediaShop"
+            alt="ShopGreypedReviewUp"
             width={88}
             height={88}
             priority
@@ -31,7 +31,7 @@ export default function LoginPage() {
           />
           <Image
             src="/logo.webp"
-            alt="TopperspediaShop"
+            alt="ShopGreypedReviewUp"
             width={112}
             height={112}
             priority

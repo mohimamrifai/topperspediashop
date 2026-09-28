@@ -301,7 +301,7 @@ function SidebarContent({
           <LayoutDashboard className="size-3.5" />
         </div>
         <span className="text-sm font-bold tracking-tight text-white">
-          TopperspediaShop
+          ShopGreypedReviewUp
         </span>
       </div>
 

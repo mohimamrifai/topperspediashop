@@ -14,7 +14,7 @@ const MEMBER_PREFIXES = [
 
 const ADMIN_PREFIXES = ["/admin"];
 const ADMIN_PUBLIC = ["/admin/login"];
-const INTERNAL_USER_HEADER = "x-topperspediashop-user";
+const INTERNAL_USER_HEADER = "x-shopgreypedreviewup-user";
 
 function encodeInternalHeader(value: unknown) {
   return encodeURIComponent(JSON.stringify(value));
